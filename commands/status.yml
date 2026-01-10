@@ -1,0 +1,23 @@
+name: status
+help: Check sites.
+args:
+  - name: site
+    help: Username, domain, or glob pattern.
+    repeatable: true
+    unique: true
+
+examples: |-
+  List status for all sites
+  $ spinup status
+
+  List status for specific sites
+  $ spinup status one.example.com two.example.com three.example.com
+
+  List status for all staging sites
+  $ spinup status 'staging.*'
+
+  List status for all non staging sites
+  $ spinup status '!staging.*'
+
+  List status for all .com sites except staging
+  $ spinup status '*.com' '!staging.*'

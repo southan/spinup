@@ -1,0 +1,13 @@
+name: unpark
+help: Remove parked domain.
+args:
+  - name: domain
+    help: Domain to be unparked.
+    required: true
+
+  - name: site
+    help: Site to unpark from.
+
+flags:
+  - long: --exact
+    help: Disable handling www alias.

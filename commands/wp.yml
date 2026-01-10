@@ -1,0 +1,15 @@
+name: wp
+catch_all: true
+help: |
+  Run WP-CLI command for all WordPress sites.
+
+  Use '--' to separate sites to run for and the WP-CLI command to run.
+examples: |-
+  Get option 'home' for all WordPress sites
+  $ spinup wp option get home
+
+  Get option 'home' for all .dev sites
+  $ spinup wp *.dev -- option get home
+
+  Prompt to select sites
+  $ spinup wp -- option get home

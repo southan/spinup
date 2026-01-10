@@ -1,0 +1,6 @@
+name: ignore
+help: List or add IPs to the jail ignore list.
+args:
+  - name: ip
+    repeatable: true
+    unique: true

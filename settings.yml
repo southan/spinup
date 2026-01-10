@@ -1,0 +1,16 @@
+env: production
+strict: ''
+tab_indent: true
+
+config_path: 'bashly.yml'
+source_dir: .
+target_dir: .
+lib_dir: lib
+commands_dir: commands
+
+usage_colors:
+  caption: bold
+  command: green
+  arg: blue
+  flag: magenta
+  environment_variable: cyan

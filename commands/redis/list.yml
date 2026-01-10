@@ -1,0 +1,5 @@
+name: list
+help: List Redis servers and their state.
+flags:
+  - long: --ping
+    help: Additional check to ensure Redis is OK.

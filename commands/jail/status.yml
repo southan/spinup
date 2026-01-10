@@ -1,0 +1,5 @@
+name: status
+help: Display jail status.
+args:
+  - name: jail
+    help: Additional info for specific jail.

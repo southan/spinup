@@ -1,0 +1,28 @@
+name: jail
+help: Manage server jail.
+
+commands:
+  - import: commands/jail/status.yml
+  - import: commands/jail/ignore.yml
+  - import: commands/jail/unignore.yml
+  - import: commands/jail/remove.yml
+
+examples: |-
+  Check jail status
+  $ spinup jail status
+
+  Check specific jail status with additional info
+  $ spinup jail status wp-login
+
+  List ignored IPs
+  $ spinup jail ignore
+
+  Prevent IP(s) from being jailed
+  $ spinup jail ignore 1.2.3.4
+
+  Remove IP from jail ignore list
+  $ spinup jail unignore 1.2.3.4
+
+  Remove an IP from all jails
+  $ spinup jail remove 1.2.3.4
+

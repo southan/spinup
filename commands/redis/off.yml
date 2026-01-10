@@ -1,0 +1,18 @@
+name: 'off'
+help: Disable Redis servers.
+args:
+  - name: site
+    help: Username, domain, glob e.g. *.dev or negated glob e.g. !*.dev
+    repeatable: true
+    unique: true
+
+flags:
+  - long: --all
+    help: Disable all Redis servers.
+
+examples: |-
+  Disable Redis for all .dev sites
+  $ spinup redis off '*.dev'
+
+  Disable Redis for all sites OTHER than .dev
+  $ spinup redis off '!*.dev'

@@ -1,0 +1,7 @@
+name: remove
+help: Remove IPs from all jails.
+args:
+  - name: ip
+    required: true
+    repeatable: true
+    unique: true

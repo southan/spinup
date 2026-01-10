@@ -1,0 +1,23 @@
+name: 'on'
+help: Enable Redis server(s).
+args:
+  - name: site
+    help: Username, domain, or glob e.g. *.dev or !*.dev
+    repeatable: true
+    unique: true
+
+flags:
+  - long: --memory
+    arg: memory_limit
+    help: Set Redis memory limit.
+    default: 256MB
+
+  - long: --all
+    help: Enable Redis servers for all sites.
+
+examples: |-
+  Enable Redis for all .dev sites
+  $ spinup redis on '*.dev'
+
+  Enable Redis for all sites OTHER than .dev
+  $ spinup redis on '!*.dev'

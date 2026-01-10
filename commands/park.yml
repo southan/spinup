@@ -1,0 +1,29 @@
+name: park
+help: Park a domain onto an existing site.
+args:
+  - name: domain
+    help: Domain to be parked.
+    required: true
+
+  - name: site
+    help: Site to park onto.
+
+flags:
+  - long: --use-dns
+    help: Validate SSL via DNS TXT records (interactive).
+
+  - long: --exact
+    help: Disable handling www alias.
+
+  - long: --force
+    help: Override if already exists.
+
+examples: |-
+  Park domain ahead of pointing DNS (interactive TXT record changes required)
+  $ spinup park example.com --use-dns
+
+  Park example.com WITHOUT www
+  $ spinup park example.com --exact
+
+  Park ONLY www.example.com
+  $ spinup park www.example.com --exact

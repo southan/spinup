@@ -1,0 +1,7 @@
+name: unignore
+help: Remove IPs from the jail ignore list.
+args:
+  - name: ip
+    required: true
+    repeatable: true
+    unique: true

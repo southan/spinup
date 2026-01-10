@@ -1,0 +1,17 @@
+name: redis
+help: Manage Redis servers.
+
+commands:
+  - import: commands/redis/list.yml
+  - import: commands/redis/on.yml
+  - import: commands/redis/off.yml
+
+examples: |-
+  List Redis servers
+  $ spinup redis list
+
+  Enable Redis servers
+  $ spinup redis on
+
+  Disable Redis servers
+  $ spinup redis off

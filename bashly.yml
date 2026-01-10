@@ -1,0 +1,14 @@
+name: spinup
+help: Server management tools.
+version: 0.1.0
+commands:
+  - import: commands/status.yml
+  - import: commands/sites.yml
+  - import: commands/users.yml
+  - import: commands/park.yml
+  - import: commands/parked.yml
+  - import: commands/unpark.yml
+  - import: commands/wp.yml
+  - import: commands/jail.yml
+  - import: commands/redis.yml
+  - import: commands/setup.yml
