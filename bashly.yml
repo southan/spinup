@@ -9,6 +9,7 @@ commands:
   - import: commands/parked.yml
   - import: commands/unpark.yml
   - import: commands/wp.yml
+  - import: commands/traffic.yml
   - import: commands/jail.yml
   - import: commands/redis.yml
   - import: commands/setup.yml
