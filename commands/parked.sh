@@ -5,6 +5,6 @@ for site in /etc/nginx/sites-available/*/; do
 	if (( ${#parked[@]} )); then
 		parked=("${parked[@]##*/}")
 		basename "$site"
-		print_list "${parked[@]}"
+		print_tree_list "${parked[@]}"
 	fi
 done

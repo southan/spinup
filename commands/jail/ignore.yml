@@ -4,3 +4,18 @@ args:
   - name: ip
     repeatable: true
     unique: true
+flags:
+  - long: --clear
+    help: Remove IP from ignore list.
+examples: |-
+  Display ignored IPs
+  $ spinup ignore
+
+  Ignore IP
+  $ spinup ignore 1.2.3.4
+
+  Clear all ignored IPs
+  $spinup ignore --clear
+
+  Unignore IP
+  $spinup ignore --clear 1.2.3.4

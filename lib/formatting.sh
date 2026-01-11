@@ -42,7 +42,7 @@ add_notice() {
 	SPINUP_NOTICES+=("$1")
 }
 
-print_list() {
+print_tree_list() {
 	local count=$#
 	local prefix
 
@@ -50,6 +50,10 @@ print_list() {
 		(( i == count )) && prefix='└' || prefix='├'
 		echo "$prefix ${!i}"
 	done
+}
+
+print_numbered_list() {
+	printf '%s\n' "$@" | nl -w$# -s ') ' | column
 }
 
 print_messages() {
@@ -87,6 +91,6 @@ print_messages() {
 	if [[ -z $label ]]; then
 		printf '%s\n' "${messages[@]}"
 	else
-		print_list "${messages[@]}"
+		print_tree_list "${messages[@]}"
 	fi
 }

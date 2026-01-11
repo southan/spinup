@@ -3,9 +3,8 @@ help: Manage server jail.
 
 commands:
   - import: commands/jail/status.yml
-  - import: commands/jail/ignore.yml
-  - import: commands/jail/unignore.yml
   - import: commands/jail/remove.yml
+  - import: commands/jail/ignore.yml
 
 examples: |-
   Check jail status
@@ -14,15 +13,18 @@ examples: |-
   Check specific jail status with additional info
   $ spinup jail status wp-login
 
-  List ignored IPs
-  $ spinup jail ignore
-
-  Prevent IP(s) from being jailed
-  $ spinup jail ignore 1.2.3.4
-
-  Remove IP from jail ignore list
-  $ spinup jail unignore 1.2.3.4
-
-  Remove an IP from all jails
+  Remove an IP from jail
   $ spinup jail remove 1.2.3.4
+
+  Display ignored IPs
+  $ spinup ignore
+
+  Ignore IP
+  $ spinup ignore 1.2.3.4
+
+  Clear all ignored IPs
+  $spinup ignore --clear
+
+  Unignore IP
+  $spinup ignore --clear 1.2.3.4
 
