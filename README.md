@@ -5,5 +5,5 @@
 ## Install
 
 ```sh
-curl -sL https://raw.githubusercontent.com/southan/spinup/main/install | sh
+curl -sL https://raw.githubusercontent.com/southan/spinup/main/install | bash
 ```

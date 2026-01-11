@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+
+tmp_file=~/spinup-$RANDOM
+curl -fsL -o "$tmp_file" https://raw.githubusercontent.com/southan/spinup/main/spinup
+chmod +x "$tmp_file"
+sudo mv "$tmp_file" /usr/local/bin/spinup
+sudo chown root:root /usr/local/bin/spinup
+
+bash /usr/local/bin/spinup --help
