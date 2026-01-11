@@ -9,7 +9,10 @@ examples: |-
   $ spinup wp option get home
 
   Get option 'home' for all .dev sites
-  $ spinup wp *.dev -- option get home
+  $ spinup wp '*.dev' -- option get home
+
+  Get option 'home' for all sites except .dev
+  $ spinup wp '!*.dev' -- option get home
 
   Prompt to select sites
   $ spinup wp -- option get home
