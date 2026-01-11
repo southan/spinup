@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SPINUP_ACCEPT_SITE() {
+SPINUP_SITES_FILTER() {
 	! user_has_redis "${SPINUP_USERS[$1]:-$1}"
 }
 

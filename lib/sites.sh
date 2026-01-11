@@ -27,14 +27,14 @@ init_sites() {
 	declare -gA SPINUP_USERS=()
 	declare -gA SPINUP_SITES_BY_USER=()
 
-	declare -F SPINUP_ACCEPT_SITE > /dev/null
-	local skip_accept=$?
+	declare -F SPINUP_SITES_FILTER > /dev/null
+	local skip_filter=$?
 
 	local site user
 	while read -r site user; do
 		SPINUP_USERS[$site]=$user
 		SPINUP_SITES_BY_USER[$user]=$site
-		if (( skip_accept )) || SPINUP_ACCEPT_SITE "$site"; then
+		if (( skip_filter )) || SPINUP_SITES_FILTER "$site"; then
 			SPINUP_SITES+=("$site")
 		fi
 	done < <(list_sites)
@@ -84,28 +84,15 @@ match_sites() {
 }
 
 select_sites() {
-	local count=$1
+	local limit=$1
+	local count=${#SPINUP_SITES[@]}
 
-	declare -F SPINUP_ACCEPT_SITE > /dev/null
-	local skip_accept=$?
+	printf '%s\n' "${SPINUP_SITES[@]}" | nl -w${#count} -s ') ' | column
 
-	local site
-	local options=()
-	declare -A options_index
-	for site in "${SPINUP_SITES[@]}"; do
-		options+=("$site")
-		options_index[$site]=1
-	done
-
-	local index
-	for index in "${!options[@]}"; do
-		printf '%s) %s\n' $((index+1)) "${options[$index]}"
-	done | column
-
-	local choices=()
 	local choice
+	local choices=()
 
-	if [[ $count == 1 ]]; then
+	if [[ $limit == 1 ]]; then
 		read -r -p 'Choose site: ' choice
 
 		if [[ -z $choice ]]; then
@@ -123,16 +110,17 @@ select_sites() {
 
 	local selected_sites=()
 
+	local index
 	for choice in "${choices[@]}"; do
 		if [[ $choice =~ ^[0-9]+$ ]]; then
 			index=$((choice - 1))
 
-			if [[ -n ${options[$index]} ]]; then
-				selected_sites+=("${options[$index]}")
+			if [[ -n ${SPINUP_SITES[$index]} ]]; then
+				selected_sites+=("${SPINUP_SITES[$index]}")
 			else
 				abort "Invalid option #$choice"
 			fi
-		elif [[ -n ${options_index[$choice]} ]]; then
+		elif [[ " ${SPINUP_SITES[*]} " == *" $choice "* ]]; then
 			selected_sites+=("$choice")
 		else
 			abort "Invalid choice '$choice'"
@@ -203,7 +191,7 @@ confirm_site() {
 find_site_wp() {
 	[[ -v SPINUP_SITES_WP ]] || declare -gA SPINUP_SITES_WP
 
-	if [[ -v SPINUP_SITES_WP[SITE] ]]; then
+	if [[ -v "SPINUP_SITES_WP[$SITE]" ]]; then
 		SITE_WP=${SPINUP_SITES_WP[$SITE]}
 	else
 		SITE_WP="$SITE_HOME/files"
