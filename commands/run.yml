@@ -1,0 +1,19 @@
+name: run
+help: Run system command or script as each user for all sites.
+catch_all: true
+help: |
+  Run system command or script as each site user.
+
+  Use '--' to separate a list of sites to run for.
+examples: |-
+  Print disk usage for each site
+  $ spinup run du -sh
+
+  Print disk usage for all .dev sites
+  $ spinup run '*.dev' -- du -sh
+
+  Print disk usage for all sites except .dev
+  $ spinup run '!*.dev' -- du -sh
+
+  Prompt to select sites
+  $ spinup run -- du -sh

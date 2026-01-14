@@ -22,13 +22,14 @@ spinup_usage() {
 
 	printf "%s\n" "$(bold "Commands:")"
 	printf "  %s   Check sites.\n" "$(green "status") "
+	printf "  %s   Realtime traffic monitor.\n" "$(green "traffic")"
 	printf "  %s   List sites.\n" "$(green "sites")  "
 	printf "  %s   List site users.\n" "$(green "users")  "
 	printf "  %s   Park a domain onto an existing site.\n" "$(green "park")   "
 	printf "  %s   List parked domains.\n" "$(green "parked") "
 	printf "  %s   Remove parked domain.\n" "$(green "unpark") "
 	printf "  %s   Run WP-CLI command for all WordPress sites.\n" "$(green "wp")     "
-	printf "  %s   Realtime traffic monitor.\n" "$(green "traffic")"
+	printf "  %s   Run system command or script as each site user.\n" "$(green "run")    "
 	printf "  %s   Manage server jail.\n" "$(green "jail")   "
 	printf "  %s   Manage Redis servers.\n" "$(green "redis")  "
 	printf "  %s   Configure server.\n" "$(green "setup")  "
@@ -72,6 +73,25 @@ spinup_status_usage() {
 
 		printf "%s\n" "$(bold "Examples:")"
 		printf "  List status for all sites\n  $ spinup status\n  \n  List status for specific sites\n  $ spinup status one.example.com two.example.com three.example.com\n  \n  List status for all staging sites\n  $ spinup status 'staging.*'\n  \n  List status for all non staging sites\n  $ spinup status '!staging.*'\n  \n  List status for all .com sites except staging\n  $ spinup status '*.com' '!staging.*'\n"
+		echo
+
+	fi
+}
+
+spinup_traffic_usage() {
+	printf "spinup traffic - Realtime traffic monitor.\n\n"
+
+	printf "%s\n" "$(bold "Usage:")"
+	printf "  spinup traffic\n"
+	printf "  spinup traffic --help | -h\n"
+	echo
+
+	if [[ -n "$long_usage" ]]; then
+
+		printf "%s\n" "$(bold "Options:")"
+
+		printf "  %s\n" "$(magenta "--help, -h")"
+		printf "    Show this help\n"
 		echo
 
 	fi
@@ -234,18 +254,23 @@ spinup_wp_usage() {
 		echo
 
 		printf "%s\n" "$(bold "Examples:")"
-		printf "  Get option 'home' for all WordPress sites\n  $ spinup wp option get home\n  \n  Get option 'home' for all .dev sites\n  $ spinup wp *.dev -- option get home\n  \n  Prompt to select sites\n  $ spinup wp -- option get home\n"
+		printf "  Get option 'home' for all WordPress sites\n  $ spinup wp option get home\n  \n  Get option 'home' for all .dev sites\n  $ spinup wp '*.dev' -- option get home\n  \n  Get option 'home' for all sites except .dev\n  $ spinup wp '!*.dev' -- option get home\n  \n  Prompt to select sites\n  $ spinup wp -- option get home\n"
 		echo
 
 	fi
 }
 
-spinup_traffic_usage() {
-	printf "spinup traffic - Realtime traffic monitor.\n\n"
+spinup_run_usage() {
+	if [[ -n $long_usage ]]; then
+		printf "spinup run\n\n"
+		printf "  Run system command or script as each site user.\n  \n  Use '--' to separate a list of sites to run for.\n\n"
+	else
+		printf "spinup run - Run system command or script as each site user.\n\n"
+	fi
 
 	printf "%s\n" "$(bold "Usage:")"
-	printf "  spinup traffic\n"
-	printf "  spinup traffic --help | -h\n"
+	printf "  spinup run [--] [...]\n"
+	printf "  spinup run --help | -h\n"
 	echo
 
 	if [[ -n "$long_usage" ]]; then
@@ -254,6 +279,10 @@ spinup_traffic_usage() {
 
 		printf "  %s\n" "$(magenta "--help, -h")"
 		printf "    Show this help\n"
+		echo
+
+		printf "%s\n" "$(bold "Examples:")"
+		printf "  Print disk usage for each site\n  $ spinup run du -sh\n  \n  Print disk usage for all .dev sites\n  $ spinup run '*.dev' -- du -sh\n  \n  Print disk usage for all sites except .dev\n  $ spinup run '!*.dev' -- du -sh\n  \n  Prompt to select sites\n  $ spinup run -- du -sh\n"
 		echo
 
 	fi
@@ -913,6 +942,29 @@ require_sites() {
 	fi
 }
 
+require_sites_split_args() {
+	# shellcheck disable=SC2154
+	SPINUP_ARGS=("$@")
+
+	local split_at=-1
+	for split_at in "${!SPINUP_ARGS[@]}"; do
+		if [[ ${SPINUP_ARGS[$split_at]} == -- ]]; then
+			break
+		fi
+		split_at=-1
+	done
+
+	if (( split_at > -1 )); then
+		local sites=("${SPINUP_ARGS[@]:0:split_at}")
+		# shellcheck disable=SC2034
+		SPINUP_ARGS=("${SPINUP_ARGS[@]:split_at+1}")
+
+		require_sites "${sites[@]}"
+	else
+		init_sites
+	fi
+}
+
 require_site() {
 	init_sites
 
@@ -1133,6 +1185,19 @@ done
 
 }
 
+spinup_traffic_command() {
+
+	#!/usr/bin/env bash
+
+	if ! command -v goaccess > /dev/null; then
+		echo 'Installing traffic monitor (GoAccess)...'
+		sudo apt install goaccess -y || exit $?
+	fi
+
+	goaccess /sites/*/logs/access.log --log-format=COMBINED
+
+}
+
 spinup_sites_command() {
 
 	#!/usr/bin/env bash
@@ -1298,25 +1363,7 @@ spinup_wp_command() {
 	#!/usr/bin/env bash
 
 	# shellcheck disable=SC2154
-	wp_args=("${command_line_args[@]:1}")
-
-	split_at=-1
-	for split_at in "${!wp_args[@]}"; do
-		if [[ ${wp_args[$split_at]} == -- ]]; then
-			break
-		fi
-		split_at=-1
-	done
-
-	if (( split_at > -1 )); then
-		sites=("${wp_args[@]:0:split_at}")
-		# shellcheck disable=SC2034
-		wp_args=("${wp_args[@]:split_at+1}")
-
-		require_sites "${sites[@]}"
-	else
-		init_sites
-	fi
+	require_sites_split_args "${command_line_args[@]:1}"
 
 	for site in "${SPINUP_SITES[@]}"; do
 		set_site "$site"
@@ -1327,7 +1374,7 @@ spinup_wp_command() {
 			continue
 		fi
 
-		wp_result=$(run_site_wp "${wp_args[@]}" 2>&1)
+		wp_result=$(run_site_wp "${SPINUP_ARGS[@]}" 2>&1)
 		wp_status=$?
 
 		echo "$(status_marker "$wp_status") $site"
@@ -1338,16 +1385,38 @@ spinup_wp_command() {
 
 }
 
-spinup_traffic_command() {
+spinup_run_command() {
 
 	#!/usr/bin/env bash
 
-	if ! command -v goaccess > /dev/null; then
-		echo 'Installing traffic monitor (GoAccess)...'
-		sudo apt install goaccess -y || exit $?
+	# shellcheck disable=SC2154
+	require_sites_split_args "${command_line_args[@]:1}"
+
+	script=''
+	if [[ ${#SPINUP_ARGS[@]} == 1 && -f ${SPINUP_ARGS[0]} ]]; then
+		script=$(cat "${SPINUP_ARGS[0]}")
 	fi
 
-	goaccess /sites/*/logs/access.log --log-format=COMBINED
+	for site in "${SPINUP_SITES[@]}"; do
+		set_site "$site"
+
+		if [[ -n $script ]]; then
+			# shellcheck disable=SC2153
+			result=$(cd "$SITE_HOME" && sudo -u "$SITE_USER" bash <<-EOF
+		SITE="$SITE"
+		SITE_USER="$SITE_USER"
+		$script
+		EOF
+		)
+	else
+		result=$(cd "$SITE_HOME" && sudo -u "$SITE_USER" "${SPINUP_ARGS[@]}")
+	fi
+
+	echo "$(status_marker "$?") $site"
+	if [[ -n $result ]]; then
+		echo "$result"
+	fi
+done
 
 }
 
@@ -1926,6 +1995,13 @@ parse_requirements() {
 			shift $#
 			;;
 
+		traffic)
+			action="traffic"
+			shift
+			spinup_traffic_parse_requirements "$@"
+			shift $#
+			;;
+
 		sites)
 			action="sites"
 			shift
@@ -1968,10 +2044,10 @@ parse_requirements() {
 			shift $#
 			;;
 
-		traffic)
-			action="traffic"
+		run)
+			action="run"
 			shift
-			spinup_traffic_parse_requirements "$@"
+			spinup_run_parse_requirements "$@"
 			shift $#
 			;;
 
@@ -2071,6 +2147,48 @@ spinup_status_parse_requirements() {
 
 				fi
 				shift
+
+				;;
+
+		esac
+	done
+
+}
+
+spinup_traffic_parse_requirements() {
+	local key
+
+	while [[ $# -gt 0 ]]; do
+		key="$1"
+		case "$key" in
+			--help | -h)
+				long_usage=yes
+				spinup_traffic_usage
+				exit
+				;;
+
+			*)
+				break
+				;;
+
+		esac
+	done
+
+	action="traffic"
+
+	while [[ $# -gt 0 ]]; do
+		key="$1"
+		case "$key" in
+
+			-?*)
+				printf "invalid option: %s\n" "$key" >&2
+				exit 1
+				;;
+
+			*)
+
+				printf "invalid argument: %s\n" "$key" >&2
+				exit 1
 
 				;;
 
@@ -2391,7 +2509,7 @@ spinup_wp_parse_requirements() {
 
 }
 
-spinup_traffic_parse_requirements() {
+spinup_run_parse_requirements() {
 	local key
 
 	while [[ $# -gt 0 ]]; do
@@ -2399,7 +2517,7 @@ spinup_traffic_parse_requirements() {
 		case "$key" in
 			--help | -h)
 				long_usage=yes
-				spinup_traffic_usage
+				spinup_run_usage
 				exit
 				;;
 
@@ -2410,21 +2528,27 @@ spinup_traffic_parse_requirements() {
 		esac
 	done
 
-	action="traffic"
+	action="run"
 
 	while [[ $# -gt 0 ]]; do
 		key="$1"
 		case "$key" in
 
+			--)
+				shift
+				other_args+=("$@")
+				break
+				;;
+
 			-?*)
-				printf "invalid option: %s\n" "$key" >&2
-				exit 1
+				other_args+=("$1")
+				shift
 				;;
 
 			*)
 
-				printf "invalid argument: %s\n" "$key" >&2
-				exit 1
+				other_args+=("$1")
+				shift
 
 				;;
 
@@ -2984,13 +3108,14 @@ run() {
 
 	case "$action" in
 		"status") spinup_status_command ;;
+		"traffic") spinup_traffic_command ;;
 		"sites") spinup_sites_command ;;
 		"users") spinup_users_command ;;
 		"park") spinup_park_command ;;
 		"parked") spinup_parked_command ;;
 		"unpark") spinup_unpark_command ;;
 		"wp") spinup_wp_command ;;
-		"traffic") spinup_traffic_command ;;
+		"run") spinup_run_command ;;
 		"jail") spinup_jail_command ;;
 		"jail status") spinup_jail_status_command ;;
 		"jail remove") spinup_jail_remove_command ;;

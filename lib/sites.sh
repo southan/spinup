@@ -149,6 +149,29 @@ require_sites() {
 	fi
 }
 
+require_sites_split_args() {
+	# shellcheck disable=SC2154
+	SPINUP_ARGS=("$@")
+
+	local split_at=-1
+	for split_at in "${!SPINUP_ARGS[@]}"; do
+		if [[ ${SPINUP_ARGS[$split_at]} == -- ]]; then
+			break
+		fi
+		split_at=-1
+	done
+
+	if (( split_at > -1 )); then
+		local sites=("${SPINUP_ARGS[@]:0:split_at}")
+		# shellcheck disable=SC2034
+		SPINUP_ARGS=("${SPINUP_ARGS[@]:split_at+1}")
+
+		require_sites "${sites[@]}"
+	else
+		init_sites
+	fi
+}
+
 require_site() {
 	init_sites
 
