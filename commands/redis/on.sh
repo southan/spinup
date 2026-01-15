@@ -13,9 +13,11 @@ service_names=()
 for site in "${SPINUP_SITES[@]}"; do
 	set_site "$site"
 
+	redis_dir="$SITE_HOME/redis"
 	redis_run_dir=${REDIS_SOCKET%/*}
 	redis_config_dir=${REDIS_CONFIG_FILE%/*}
 
+	[[ -d $redis_dir ]] || sudo -u "$SITE_USER" mkdir -p "$redis_dir"
 	[[ -d $redis_config_dir ]] || sudo mkdir -p "$redis_config_dir"
 
 	root_write "$REDIS_CONFIG_FILE" <<-EOF
@@ -32,7 +34,7 @@ for site in "${SPINUP_SITES[@]}"; do
 	maxmemory $memory
 	maxmemory-policy allkeys-lfu
 
-	dir $SITE_HOME/redis
+	dir $redis_dir
 	dbfilename dump.rdb
 	databases 1
 
@@ -117,7 +119,7 @@ for site in "${SPINUP_SITES[@]}"; do
 	ProtectSystem=full
 	ReadOnlyDirectories=/
 	ReadWriteDirectories=-$redis_run_dir
-	ReadWriteDirectories=-$SITE_HOME/redis
+	ReadWriteDirectories=-$redis_dir
 	ReadWriteDirectories=-$SITE_HOME/logs
 
 	NoNewPrivileges=true
