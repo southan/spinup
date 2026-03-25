@@ -53,7 +53,9 @@ print_tree_list() {
 }
 
 print_numbered_list() {
-	printf '%s\n' "$@" | nl -w$# -s ') ' | column
+	local count=$#
+	local width=${#count}
+	printf '%s\n' "$@" | nl -w"$width" -s ') ' | column
 }
 
 print_messages() {
