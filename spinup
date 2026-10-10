@@ -298,6 +298,7 @@ spinup_jail_usage() {
 
 	printf "%s\n" "$(bold "Commands:")"
 	printf "  %s   Display jail status.\n" "$(green "status")"
+	printf "  %s   Add IP(s) to jail.\n" "$(green "add")   "
 	printf "  %s   Remove IPs from all jails.\n" "$(green "remove")"
 	printf "  %s   List or add IPs to the jail ignore list.\n" "$(green "ignore")"
 	echo
@@ -337,6 +338,35 @@ spinup_jail_status_usage() {
 
 		printf "  %s\n" "$(blue "JAIL")"
 		printf "    Additional info for specific jail.\n"
+		echo
+
+	fi
+}
+
+spinup_jail_add_usage() {
+	printf "spinup jail add - Add IP(s) to jail.\n\n"
+
+	printf "%s\n" "$(bold "Usage:")"
+	printf "  spinup jail add IP... [OPTIONS]\n"
+	printf "  spinup jail add --help | -h\n"
+	echo
+
+	if [[ -n "$long_usage" ]]; then
+
+		printf "%s\n" "$(bold "Options:")"
+
+		printf "  %s\n" "$(magenta "--jail JAIL")"
+		printf "    Specify jail (defaults to first available jail).\n"
+		echo
+
+		printf "  %s\n" "$(magenta "--help, -h")"
+		printf "    Show this help\n"
+		echo
+
+		printf "%s\n" "$(bold "Arguments:")"
+
+		printf "  %s\n" "$(blue "IP...")"
+		printf "\n"
 		echo
 
 	fi
@@ -1368,7 +1398,7 @@ spinup_wp_command() {
 	require_sites_split_args "${command_line_args[@]:1}"
 
 	if [ ! -t 0 ]; then
-			stdin=$(cat)
+		stdin=$(cat)
 	fi
 
 	for site in "${SPINUP_SITES[@]}"; do
@@ -1460,6 +1490,23 @@ spinup_jail_status_command() {
 
 }
 
+spinup_jail_add_command() {
+
+	#!/usr/bin/env bash
+
+	jail="${args[--jail]:-}"
+	if [[ -z $jail ]]; then
+		jail=$(sudo fail2ban-client status | grep "Jail list" | sed -E 's/^[^:]+:[ \t]+//' | sed 's/,//g' | awk '{print $1}')
+	fi
+
+	ips=''
+	# shellcheck disable=SC2154
+	eval "ips=(${args[ip]})"
+
+	sudo fail2ban-client set "$jail" banip "${ips[@]}"
+
+}
+
 spinup_jail_remove_command() {
 
 	#!/usr/bin/env bash
@@ -1467,6 +1514,7 @@ spinup_jail_remove_command() {
 	ips=''
 	# shellcheck disable=SC2154
 	eval "ips=(${args[ip]})"
+
 	sudo fail2ban-client unban "${ips[@]}"
 
 }
@@ -2724,6 +2772,13 @@ spinup_jail_parse_requirements() {
 			shift $#
 			;;
 
+		add)
+			action="add"
+			shift
+			spinup_jail_add_parse_requirements "$@"
+			shift $#
+			;;
+
 		remove)
 			action="remove"
 			shift
@@ -2844,6 +2899,94 @@ spinup_jail_status_parse_requirements() {
 
 		esac
 	done
+
+}
+
+spinup_jail_add_parse_requirements() {
+	local key
+
+	while [[ $# -gt 0 ]]; do
+		key="$1"
+		case "$key" in
+			--help | -h)
+				long_usage=yes
+				spinup_jail_add_usage
+				exit
+				;;
+
+			*)
+				break
+				;;
+
+		esac
+	done
+
+	action="jail add"
+
+	while [[ $# -gt 0 ]]; do
+		key="$1"
+		case "$key" in
+
+			--jail)
+
+				if [[ -n ${2+x} ]]; then
+					args['--jail']="$2"
+					shift
+					shift
+				else
+					printf "%s\n" "--jail requires an argument: --jail JAIL" >&2
+					exit 1
+				fi
+				;;
+
+			--)
+				shift
+				while [[ $# -gt 0 ]]; do
+					key="$1"
+
+					escaped="$(printf '%q' "$1")"
+					if [[ -z ${args['ip']+x} ]]; then
+						args['ip']="$escaped"
+						unique_lookup["ip:$escaped"]=1
+					elif [[ -z "${unique_lookup["ip:$escaped"]:-}" ]]; then
+						args['ip']="${args['ip']} $escaped"
+						unique_lookup["ip:$escaped"]=1
+
+					fi
+					shift
+
+				done
+				break
+				;;
+
+			-?*)
+				printf "invalid option: %s\n" "$key" >&2
+				exit 1
+				;;
+
+			*)
+
+				escaped="$(printf '%q' "$1")"
+				if [[ -z ${args['ip']+x} ]]; then
+					args['ip']="$escaped"
+					unique_lookup["ip:$escaped"]=1
+				elif [[ -z "${unique_lookup["ip:$escaped"]:-}" ]]; then
+					args['ip']="${args['ip']} $escaped"
+					unique_lookup["ip:$escaped"]=1
+
+				fi
+				shift
+
+				;;
+
+		esac
+	done
+
+	if [[ -z ${args['ip']+x} ]]; then
+		printf "missing required argument: IP\nusage: spinup jail add IP... [OPTIONS]\n" >&2
+
+		exit 1
+	fi
 
 }
 
@@ -3399,6 +3542,7 @@ run() {
 		"run") spinup_run_command ;;
 		"jail") spinup_jail_command ;;
 		"jail status") spinup_jail_status_command ;;
+		"jail add") spinup_jail_add_command ;;
 		"jail remove") spinup_jail_remove_command ;;
 		"jail ignore") spinup_jail_ignore_command ;;
 		"redis") spinup_redis_command ;;

@@ -3,6 +3,7 @@ help: Manage server jail.
 
 commands:
   - import: commands/jail/status.yml
+  - import: commands/jail/add.yml
   - import: commands/jail/remove.yml
   - import: commands/jail/ignore.yml
 

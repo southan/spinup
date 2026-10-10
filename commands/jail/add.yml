@@ -1,0 +1,12 @@
+name: add
+help: Add IP(s) to jail.
+args:
+  - name: ip
+    required: true
+    repeatable: true
+    unique: true
+
+flags:
+  - long: --jail
+    arg: jail
+    help: Specify jail (defaults to first available jail).
